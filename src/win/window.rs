@@ -489,7 +489,7 @@ unsafe fn unregister_wnd_class(wnd_class: ATOM) {
 /// because of the Windows message loops' reentrant nature. Care still needs to be taken to prevent
 /// `handler` from indirectly triggering other events that would also need to be handled using
 /// `handler`.
-pub(super) struct WindowState {
+pub struct WindowState {
     /// The HWND belonging to this window. The window's actual state is stored in the `WindowState`
     /// struct associated with this HWND through `unsafe { GetWindowLongPtrW(self.hwnd,
     /// GWLP_USERDATA) } as *const WindowState`.
@@ -565,17 +565,20 @@ impl WindowState {
                     )
                 };
             }
+
+            WindowTask::User(callback) => callback(),
         }
     }
 }
 
 /// Tasks that must be deferred until the end of [`wnd_proc()`] to avoid reentrant `WindowState`
 /// borrows. See the docstring on [`WindowState::deferred_tasks`] for more information.
-#[derive(Debug, Clone)]
-pub(super) enum WindowTask {
+
+pub enum WindowTask {
     /// Resize the window to the given size. The size is in logical pixels. DPI scaling is applied
     /// automatically.
     Resize(Size),
+    User(Box<dyn FnOnce()>),
 }
 
 pub struct Window<'a> {

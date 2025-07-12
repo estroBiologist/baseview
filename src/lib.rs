@@ -1,9 +1,9 @@
 #[cfg(target_os = "macos")]
-mod macos;
+pub mod macos;
 #[cfg(target_os = "windows")]
-mod win;
+pub mod win;
 #[cfg(target_os = "linux")]
-mod x11;
+pub mod x11;
 
 mod clipboard;
 mod event;

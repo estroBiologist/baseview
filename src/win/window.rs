@@ -695,8 +695,8 @@ impl Window<'_> {
                 handle.hwnd = hwnd as *mut c_void;
                 let handle = RawWindowHandle::Win32(handle);
 
-                GlContext::create(&handle, gl_config).expect("Could not create OpenGL context")
-            });
+                GlContext::create(&handle, gl_config).ok()
+            }).unwrap_or(None);
 
             let (parent_handle, window_handle) = ParentHandle::new(hwnd);
             let parent_handle = if parented { Some(parent_handle) } else { None };

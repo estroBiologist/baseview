@@ -309,6 +309,10 @@ impl<'a> Window<'a> {
         }
     }
 
+    pub fn defocus(&mut self) {
+        unimplemented!()
+    }
+
     pub fn resize(&mut self, size: Size) {
         if self.inner.open.get() {
             // NOTE: macOS gives you a personal rave if you pass in fractional pixels here. Even

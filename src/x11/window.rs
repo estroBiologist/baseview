@@ -329,6 +329,10 @@ impl<'a> Window<'a> {
         unimplemented!()
     }
 
+    pub fn defocus(&mut self) {
+        unimplemented!()
+    }
+
     pub fn resize(&mut self, size: Size) {
         let scaling = self.inner.window_info.scale();
         let new_window_info = WindowInfo::from_logical_size(size, scaling);

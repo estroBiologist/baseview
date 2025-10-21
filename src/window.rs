@@ -110,6 +110,10 @@ impl<'a> Window<'a> {
         self.window.focus()
     }
 
+    pub fn defocus(&mut self) {
+        self.window.defocus()
+    }
+
     /// If provided, then an OpenGL context will be created for this window. You'll be able to
     /// access this context through [crate::Window::gl_context].
     #[cfg(feature = "opengl")]

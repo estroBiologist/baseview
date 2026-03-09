@@ -184,6 +184,7 @@ impl EventLoop {
                     &mut crate::Window::new(Window { inner: &self.window }),
                     Event::Mouse(MouseEvent::CursorMoved {
                         position: logical_pos,
+                        delta: crate::Point { x: 0.0, y: 0.0 },
                         modifiers: key_mods(event.state),
                     }),
                 );
@@ -202,6 +203,7 @@ impl EventLoop {
                     &mut crate::Window::new(Window { inner: &self.window }),
                     Event::Mouse(MouseEvent::CursorMoved {
                         position: logical_pos,
+                        delta: crate::Point { x: 0.0, y: 0.0 },
                         modifiers: key_mods(event.state),
                     }),
                 );

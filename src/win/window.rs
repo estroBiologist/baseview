@@ -204,6 +204,7 @@ unsafe fn wnd_proc_inner(
             let logical_pos = physical_pos.to_logical(&window_state.window_info.borrow());
             let move_event = Event::Mouse(MouseEvent::CursorMoved {
                 position: logical_pos,
+                delta: crate::Point { x: 0.0, y: 0.0 },
                 modifiers: window_state
                     .keyboard_state
                     .borrow()

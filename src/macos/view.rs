@@ -42,7 +42,7 @@ macro_rules! add_simple_mouse_class_method {
         extern "C" fn $sel(this: &Object, _: Sel, _: id){
             let state = unsafe { WindowState::from_view(this) };
 
-            state.trigger_event(Event::Mouse($event));
+            state.trigger_deferrable_event(WindowTask::Event(Event::Mouse($event)));
         }
 
         $class.add_method(
@@ -62,10 +62,10 @@ macro_rules! add_mouse_button_class_method {
 
             let modifiers = unsafe { NSEvent::modifierFlags(event) };
 
-            state.trigger_event(Event::Mouse($event_ty {
+            state.trigger_deferrable_event(WindowTask::Event(Event::Mouse($event_ty {
                 button: $button,
                 modifiers: make_modifiers(modifiers),
-            }));
+            })));
         }
 
         $class.add_method(
@@ -268,7 +268,7 @@ extern "C" fn resign_first_responder(this: &Object, _sel: Sel) -> BOOL {
 extern "C" fn window_should_close(this: &Object, _: Sel, _sender: id) -> BOOL {
     let state = unsafe { WindowState::from_view(this) };
 
-    state.trigger_event(Event::Window(WindowEvent::WillClose));
+    state.trigger_deferrable_event(WindowTask::Event(Event::Window(WindowEvent::WillClose)));
 
     state.window_inner.close();
 
@@ -309,7 +309,7 @@ extern "C" fn view_did_change_backing_properties(this: &Object, _: Sel, _: id) {
         // other platform implementations
         if new_window_info.physical_size() != window_info.physical_size() {
             state.window_info.set(new_window_info);
-            state.trigger_event(Event::Window(WindowEvent::Resized(new_window_info)));
+            state.trigger_deferrable_event(WindowTask::Event(Event::Window(WindowEvent::Resized(new_window_info))));
         }
     }
 }
@@ -403,11 +403,11 @@ extern "C" fn mouse_moved(this: &Object, _sel: Sel, event: id) {
 
     let position = Point { x: point.x, y: point.y };
 
-    state.trigger_event(Event::Mouse(MouseEvent::CursorMoved {
+    state.trigger_deferrable_event(WindowTask::Event(Event::Mouse(MouseEvent::CursorMoved {
         position,
         delta: unsafe { crate::Point { x: NSEvent::deltaX(event), y: NSEvent::deltaY(event) } },
         modifiers: make_modifiers(modifiers),
-    }));
+    })));
 }
 
 extern "C" fn scroll_wheel(this: &Object, _: Sel, event: id) {
@@ -426,10 +426,10 @@ extern "C" fn scroll_wheel(this: &Object, _: Sel, event: id) {
 
     let modifiers = unsafe { NSEvent::modifierFlags(event) };
 
-    state.trigger_event(Event::Mouse(MouseEvent::WheelScrolled {
+    state.trigger_deferrable_event(WindowTask::Event(Event::Mouse(MouseEvent::WheelScrolled {
         delta,
         modifiers: make_modifiers(modifiers),
-    }));
+    })));
 }
 
 fn get_drag_position(sender: id) -> Point {

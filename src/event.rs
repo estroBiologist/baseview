@@ -40,7 +40,9 @@ pub enum MouseEvent {
     CursorMoved {
         /// The logical coordinates of the mouse position
         position: Point,
+
         delta: Point,
+
         /// The modifiers that were held down just before the event.
         modifiers: Modifiers,
     },

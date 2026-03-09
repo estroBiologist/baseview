@@ -310,7 +310,6 @@ impl<'a> Window<'a> {
     }
 
     pub fn defocus(&mut self) {
-        unimplemented!()
     }
 
     pub fn resize(&mut self, size: Size) {

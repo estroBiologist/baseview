@@ -404,7 +404,7 @@ extern "C" fn mouse_moved(this: &Object, _sel: Sel, event: id) {
 
     state.trigger_event(Event::Mouse(MouseEvent::CursorMoved {
         position,
-        delta: crate::Point { x: NSEvent::deltaX(event), y: NSEvent::deltaY(event) },
+        delta: unsafe { crate::Point { x: NSEvent::deltaX(event), y: NSEvent::deltaY(event) } },
         modifiers: make_modifiers(modifiers),
     }));
 }

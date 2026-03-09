@@ -357,7 +357,7 @@ impl<'a> Window<'a> {
     }
 }
 
-pub(super) struct WindowState {
+pub struct WindowState {
     pub(super) window_inner: WindowInner,
     window_handler: RefCell<Box<dyn WindowHandler>>,
     keyboard_state: KeyboardState,

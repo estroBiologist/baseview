@@ -394,9 +394,11 @@ impl WindowState {
     /// Will panic if `window_handler` is already borrowed (see `trigger_deferrable_event`).
     pub(super) fn trigger_event(&self, event: Event) -> EventStatus {
         let mut window = crate::Window::new(Window { inner: &self.window_inner });
-        let mut window_handler = self.window_handler.borrow_mut();
-        let status = window_handler.on_event(&mut window, event);
-        self.send_deferred_events(window_handler.as_mut());
+        let status = {
+            let mut window_handler = self.window_handler.borrow_mut();
+            window_handler.on_event(&mut window, event)
+        };
+        self.send_deferred_events();
         status
     }
 
@@ -412,7 +414,8 @@ impl WindowState {
                 WindowTask::User(callback) => callback(),
             };
 
-            self.send_deferred_events(window_handler.as_mut());
+            drop(window_handler);
+            self.send_deferred_events();
         } else {
             self.deferred_events.borrow_mut().push_back(event);
         }
@@ -420,9 +423,11 @@ impl WindowState {
 
     pub(super) fn trigger_frame(&self) {
         let mut window = crate::Window::new(Window { inner: &self.window_inner });
-        let mut window_handler = self.window_handler.borrow_mut();
-        window_handler.on_frame(&mut window);
-        self.send_deferred_events(window_handler.as_mut());
+        {
+            let mut window_handler = self.window_handler.borrow_mut();
+            window_handler.on_frame(&mut window);
+        }
+        self.send_deferred_events();
     }
 
     pub(super) fn keyboard_state(&self) -> &KeyboardState {
@@ -457,13 +462,13 @@ impl WindowState {
         (*window_state_ptr).frame_timer.set(Some(timer));
     }
 
-    fn send_deferred_events(&self, window_handler: &mut dyn WindowHandler) {
+    fn send_deferred_events(&self) {
         let mut window = crate::Window::new(Window { inner: &self.window_inner });
         loop {
             let next_event = self.deferred_events.borrow_mut().pop_front();
             if let Some(event) = next_event {
                 match event {
-                    WindowTask::Event(event) => { window_handler.on_event(&mut window, event); },
+                    WindowTask::Event(event) => { self.window_handler.borrow_mut().on_event(&mut window, event); },
                     WindowTask::User(callback) => callback(),
                 };
             } else {

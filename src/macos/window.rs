@@ -366,7 +366,12 @@ pub(super) struct WindowState {
     pub window_info: Cell<WindowInfo>,
 
     /// Events that will be triggered at the end of `window_handler`'s borrow.
-    deferred_events: RefCell<VecDeque<Event>>,
+    deferred_events: RefCell<VecDeque<WindowTask>>,
+}
+
+pub enum WindowTask {
+    Event(Event),
+    User(Box<dyn FnOnce()>),
 }
 
 impl WindowState {
@@ -375,7 +380,7 @@ impl WindowState {
     /// This method returns a cloned `Rc<WindowState>` rather than just a `&WindowState`, since the
     /// original `Rc<WindowState>` owned by the `NSView` can be dropped at any time
     /// (including during an event handler).
-    pub(super) unsafe fn from_view(view: &Object) -> Rc<WindowState> {
+    pub unsafe fn from_view(view: &Object) -> Rc<WindowState> {
         let state_ptr: *const c_void = *view.get_ivar(BASEVIEW_STATE_IVAR);
 
         let state_rc = Rc::from_raw(state_ptr as *const WindowState);
@@ -398,10 +403,15 @@ impl WindowState {
     /// Trigger the event immediately if `window_handler` can be borrowed mutably,
     /// otherwise add the event to a queue that will be cleared once `window_handler`'s mutable borrow ends.
     /// As this method might result in the event triggering asynchronously, it can't reliably return the event status.
-    pub(super) fn trigger_deferrable_event(&self, event: Event) {
+    pub fn trigger_deferrable_event(&self, event: WindowTask) {
         if let Ok(mut window_handler) = self.window_handler.try_borrow_mut() {
             let mut window = crate::Window::new(Window { inner: &self.window_inner });
-            window_handler.on_event(&mut window, event);
+            
+            match event {
+                WindowTask::Event(event) => { window_handler.on_event(&mut window, event); },
+                WindowTask::User(callback) => callback(),
+            };
+
             self.send_deferred_events(window_handler.as_mut());
         } else {
             self.deferred_events.borrow_mut().push_back(event);
@@ -452,7 +462,10 @@ impl WindowState {
         loop {
             let next_event = self.deferred_events.borrow_mut().pop_front();
             if let Some(event) = next_event {
-                window_handler.on_event(&mut window, event);
+                match event {
+                    WindowTask::Event(event) => { window_handler.on_event(&mut window, event); },
+                    WindowTask::User(callback) => callback(),
+                };
             } else {
                 break;
             }

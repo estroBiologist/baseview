@@ -14,6 +14,7 @@ use objc::{
 use uuid::Uuid;
 
 use crate::MouseEvent::{ButtonPressed, ButtonReleased};
+use crate::macos::WindowTask;
 use crate::{
     DropData, DropEffect, Event, EventStatus, MouseButton, MouseEvent, Point, ScrollDelta, Size,
     WindowEvent, WindowInfo, WindowOpenOptions,
@@ -253,14 +254,14 @@ extern "C" fn become_first_responder(this: &Object, _sel: Sel) -> BOOL {
         }
     };
     if is_key_window {
-        state.trigger_deferrable_event(Event::Window(WindowEvent::Focused));
+        state.trigger_deferrable_event(WindowTask::Event(Event::Window(WindowEvent::Focused)));
     }
     YES
 }
 
 extern "C" fn resign_first_responder(this: &Object, _sel: Sel) -> BOOL {
     let state = unsafe { WindowState::from_view(this) };
-    state.trigger_deferrable_event(Event::Window(WindowEvent::Unfocused));
+    state.trigger_deferrable_event(WindowTask::Event(Event::Window(WindowEvent::Unfocused)));
     YES
 }
 

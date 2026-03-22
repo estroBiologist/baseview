@@ -11,10 +11,10 @@ use raw_window_handle::{
     XlibWindowHandle,
 };
 
+use x11rb::CURRENT_TIME;
 use x11rb::connection::Connection;
 use x11rb::protocol::xproto::{
-    AtomEnum, ChangeWindowAttributesAux, ConfigureWindowAux, ConnectionExt as _, CreateGCAux,
-    CreateWindowAux, EventMask, PropMode, Visualid, Window as XWindow, WindowClass,
+    AtomEnum, ChangeWindowAttributesAux, ConfigureWindowAux, ConnectionExt as _, CreateGCAux, CreateWindowAux, EventMask, InputFocus, PropMode, Timestamp, Visualid, Window as XWindow, WindowClass
 };
 use x11rb::wrapper::ConnectionExt as _;
 
@@ -322,15 +322,27 @@ impl<'a> Window<'a> {
     }
 
     pub fn has_focus(&mut self) -> bool {
-        unimplemented!()
+        let Ok(focused) = self.inner.xcb_connection.conn.get_input_focus() else {
+            return false
+        };
+
+        let Ok(reply) = focused.reply() else {
+            return false
+        };
+
+        reply.focus == self.inner.window_id
     }
 
     pub fn focus(&mut self) {
-        unimplemented!()
+        let _ = self.inner.xcb_connection.conn.set_input_focus(
+            InputFocus::POINTER_ROOT,
+            self.inner.window_id,
+            CURRENT_TIME
+        );
     }
 
     pub fn defocus(&mut self) {
-        unimplemented!()
+        // unimplemented
     }
 
     pub fn resize(&mut self, size: Size) {
